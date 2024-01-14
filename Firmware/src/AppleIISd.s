@@ -78,15 +78,14 @@
             LDY   #0          ; display copyright message
 @DRAW:      LDA   TEXT,Y
             BEQ   @OAPPLE     ; check for NULL
-            ORA   #$80        ; set MSB
             STA   $0750,Y     ; put second to last line
             INY
             BPL   @DRAW
 
-            LDA   #197      
+@OAPPLE:    LDA   #197      
             JSR   $FCA8       ; wait for 100 ms
 
-@OAPPLE:    LDA   OAPPLE      ; check for OA key
+            LDA   OAPPLE      ; check for OA key
             BPL   @INIT       ; and skip boot if pressed
 
 @NEXTSLOT:  LDA   CURSLOT     ; skip boot when no card
@@ -355,8 +354,14 @@ INIT:       STZ   CTRL,X      ; reset SPI controller
             TYA               ; retval in A
 KNOWNRTS:   RTS
 
+.macro ASC text
+.repeat .strlen(text), I
+.byte .strat(text, I) | $80
+.endrep
+.endmacro
 
-TEXT:       .asciiz " Apple][Sd v1.2.2 (c)2021 Florian Reitz"
+TEXT:       ASC " Apple][Sd v1.2.3 (c)2021 Florian Reitz"
+            .byt $00
             .assert(*-TEXT)=40, error, "TEXT must be 40 bytes long"
 
 
