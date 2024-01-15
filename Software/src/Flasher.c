@@ -90,11 +90,6 @@ int main()
             fileSize = fread(buffer, 1, sizeof(buffer), pFile);
             fclose(pFile);
             pFile = NULL;
-
-            if(fileSize != BUFFER_SIZE)
-            {
-                cprintf("\r\nWrong file size: %d\r\n", fileSize);
-            }
         }
         else
         {
@@ -138,8 +133,13 @@ int main()
         // disable write
         pAIISD->status.pgmen = 0;
     }
+    else
+    {
+        cprintf("\r\nWrong file size: %d\r\n", fileSize);
+    }  
 
     cgetc();
+    rebootafterexit();
     return retval;
 }
 
