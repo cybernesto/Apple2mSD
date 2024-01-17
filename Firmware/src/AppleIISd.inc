@@ -59,7 +59,7 @@ WP          =     $20
 CD          =     $40
 CARD_INIT   =     $80
 
-SMDRIVERVER =     $120B       ; Version 1.2 Beta
+SMDRIVERVER =     $123B       ; Version 1.2.3 Beta
 
 ; Error codes
 NO_ERR          =     $00
