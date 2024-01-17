@@ -287,11 +287,9 @@ TRANSLATE:  LDA   DRVNUM,Y
 @UNIT2:     LDA   SLOT16
             ORA   #$80          ; drive 1
             BRA   @STORE
-@UNIT3:     LDA   SLOT16
-            DEC   A             ; phantom slot
+@UNIT3:     LDA   PHANTOMSLOT,Y ; phantom slot
             BRA   @STORE
-@UNIT4:     LDA   SLOT16
-            DEC   A             ; phantom slot
+@UNIT4:     LDA   PHANTOMSLOT,Y ; phantom slot         
             ORA   #$80          ; drive 1
 
 @STORE:     STA   DSNUMBER      ; store in ProDOS variable
@@ -416,3 +414,14 @@ STATUS3DATA:
             .byt $00                    ; removable hard disk
             .word SMDRIVERVER           ; driver version
             .assert (*-STATUS3DATA)=21, error, "STATUS3DATA must be 21 bytes long"
+
+; Phantom slot mapping table
+PHANTOMSLOT:
+            .byt $00                      ; not used
+            .byt $40
+            .byt $40
+            .byt $00                      ; not used
+            .byt $10
+            .byt $20
+            .byt $40
+            .byt $40

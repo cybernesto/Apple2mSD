@@ -40,7 +40,7 @@
             .segment "SLOTID"
             .byt   $0         ; not extended, no SCSI, no RAM
             .word  $0000      ; use status call
-            .byt   $97        ; Status bits
+            .byt   $B7        ; Status bits
             .byt   <DRIVER    ; LSB of driver
 
 

@@ -46,8 +46,8 @@ The AppleIISd features Smartport drivers in ROM to provide more than two drives 
 As ProDOS supports only two drives per slot, additional drives on a Smartport device are mapped to 'phantom slots'. Version prior to version 2 supported only the remapping of drives when the card was in slot 5. Starting with version 2, the remapping seems to work on all slots. The following list shows the assignments as slot/drive, when no other devices are attached:
 
 * Slot 7: 7/1, 7/2, 4/1, 4/2
-* Slot 6: 6/1, 6/2, 4/1, 4/1
-* Slot 5: 5/1, 5/2, 2/1, 2/1
+* Slot 6: 6/1, 6/2, 4/1, 4/2
+* Slot 5: 5/1, 5/2, 2/1, 2/2
 * Slot 4: 4/1, 4/2, 1/1, 1/2
 * Slot 3: 80 col HW, not usable
 * Slot 2: 2/1, 2/2, 4/1, 4/2
@@ -135,9 +135,6 @@ The control registers of the *AppleIISd* are mapped to the usual I/O space at **
 * Enable more than 4 volumes under GS/OS
 * Support for 6502 CPUs
 * Support for CP/M
-
-## Known Bugs
-* Programs not startable from partitions 3 and 4 under ProDOS
 
 
 ![Front_Img_Smd](Images/Card%20Front%20SMD.jpg)
