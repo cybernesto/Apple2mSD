@@ -59,13 +59,9 @@
             LDX   #$00        ; is Smartport controller
             ;LDX   #$3C        ; is a disk controller
 
-            SEI               ; find slot
-            BIT   $CFFF
-            JSR   KNOWNRTS
+            JSR   $FF58       ;MON_IORTS
             TSX
             LDA   $0100,X
-            CLI
-            STA   CURSLOT     ; $Cs
             AND   #$0F
             STA   SLOT        ; $0s
             ASL   A
@@ -73,31 +69,38 @@
             ASL   A
             ASL   A
             STA   SLOT16      ; $s0
-            TAX               ; X holds now SLOT16
 
             LDY   #0          ; display copyright message
 @DRAW:      LDA   TEXT,Y
             BEQ   @OAPPLE     ; check for end of string
-            STA   $0750,Y     ; put second to last line
+            CMP   #$E0
+            BCC   @NOCAPS
+            LDX   $FBB3       ; Machine ID
+            CPX   #$06        ; Is it an Apple IIe or newer?
+            BEQ   @NOCAPS
+            AND   #$DF        ; mask for uppercase conversion
+@NOCAPS:    STA   $0750,Y     ; put second to last line
             INY
             BPL   @DRAW
 
 @OAPPLE:    LDA   #197      
             JSR   $FCA8       ; wait for 100 ms
-
             LDA   OAPPLE      ; check for OA key
-            BPL   @INIT       ; and skip boot if pressed
+            BMI   @NEXTSLOT   ; and skip boot if pressed
 
-@NEXTSLOT:  LDA   CURSLOT     ; skip boot when no card
+            LDA   SLOT16
+            TAX               ; X holds now SLOT16
+            JSR   INIT
+            BCC   @BOOT       ; init successful
+
+@NEXTSLOT:  LDA   SLOT        ; skip boot when no card
+            ORA   #$C0
             SEC
             SBC   #$01
             STA   CMDHI       ; use CMDHI/LO as pointer
             LDA   #0
             STA   CMDLO
-            JMP   (CMDLO)
-
-@INIT:      JSR   INIT
-            BNE   @NEXTSLOT   ; init not successful
+            JMP   (CMDLO)            
 
 ;*******************************
 ;
@@ -106,14 +109,13 @@
 ;*******************************
 
 ; load disk blocks 0 and 1 to $800 and $A00
-@BOOT:      LDA   #$08        ; load to $800
+@BOOT:      STX   DSNUMBER    ; set to current slot
+            LDA   #$08        ; load to $800
             STA   BUFFER+1    ; buffer hi
             LDA   #0
             STA   BUFFER      ; buffer lo
             STA   BLOCKNUM+1  ; block hi
             STA   BLOCKNUM    ; block lo
-            LDA   SLOT16
-            STA   DSNUMBER    ; set to current slot
             JSR   READ
             BCS   @NEXTSLOT   ; load not successful 
 
@@ -156,7 +158,6 @@ DRIVER:     CLC               ; ProDOS entry
             TSX
             LDA   $0100,X
             CLI
-            STA   CURSLOT     ; $Cs
             AND   #$0F
             STA   SLOT        ; $0s
             TAY               ; Y holds now SLOT
