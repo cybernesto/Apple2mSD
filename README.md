@@ -133,7 +133,6 @@ The control registers of the *AppleIISd* are mapped to the usual I/O space at **
 ## TODOs
 * Much more testing
 * Enable more than 4 volumes under GS/OS
-* Support for 6502 CPUs
 * Support for CP/M
 
 

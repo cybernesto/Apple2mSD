@@ -1,7 +1,7 @@
 ;*******************************
 ;
 ; Apple][Sd Firmware
-; Version 1.2.3
+; Version 1.3.0
 ; Defines
 ;
 ; (c) Florian Reitz, 2017 - 2021
@@ -59,7 +59,7 @@ WP          =     $20
 CD          =     $40
 CARD_INIT   =     $80
 
-SMDRIVERVER =     $123B       ; Version 1.2.3 Beta
+SMDRIVERVER =     $130B       ; Version 1.3.0 Beta
 
 ; Error codes
 NO_ERR          =     $00

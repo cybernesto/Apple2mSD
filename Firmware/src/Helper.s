@@ -1,7 +1,7 @@
 ;*******************************
 ;
 ; Apple][Sd Firmware
-; Version 1.2.3
+; Version 1.3.0
 ; Helper functions
 ;
 ; (c) Florian Reitz, 2017 - 2021
@@ -32,7 +32,8 @@
 ;
 ;*******************************
 
-SDCMD:      PHY
+SDCMD:      TYA
+            PHA
             LDY   #0
 @LOOP:      LDA   (CMDLO),Y
             STA   DATA,X
@@ -41,7 +42,8 @@ SDCMD:      PHY
             INY
             CPY   #6
             BCC   @LOOP
-            PLY
+            PLA
+            TAY
             RTS
 
 
@@ -74,7 +76,8 @@ GETR1:      LDA   #DUMMY
 
 GETR3:      JSR   GETR1       ; get R1 first
             PHA               ; save R1
-            PHY               ; save Y
+            TYA
+            PHA               ; save Y
             LDY   #04         ; load counter
             JMP   @WAIT       ; first byte is already there 
 @LOOP:      LDA   #DUMMY      ; send dummy
@@ -94,7 +97,8 @@ GETR3:      JSR   GETR1       ; get R1 first
             STA   R31,Y
             PLA
             STA   R30,Y       ; R30 is MSB
-            PLY               ; restore Y
+            PLA               ; restore Y
+            TAY
             LDA   #DUMMY
             STA   DATA,X      ; send another dummy
             PLA               ; restore R1
@@ -110,16 +114,19 @@ GETR3:      JSR   GETR1       ; get R1 first
 ;
 ;*******************************
 
-GETBLOCK:   PHX               ; save X
-            PHY               ; save Y
+GETBLOCK:   TXA               ; save X
+            PHA
+            TYA               ; save Y
+            PHA
             LDX   SLOT        ; SLOT is now in X
             LDY   SLOT16
             LDA   BLOCKNUM    ; store block num
             STA   R33,X       ; in R30-R33
             LDA   BLOCKNUM+1
             STA   R32,X
-            STZ   R31,X
-            STZ   R30,X
+            LDA   #0
+            STA   R31,X
+            STA   R30,X
 
             TYA               ; get SLOT16
             EOR   DSNUMBER
@@ -131,7 +138,8 @@ GETBLOCK:   PHX               ; save X
 @DRIVE:     LDA   DSNUMBER    ; drive number
             BPL   @SDHC       ; D1
             LDA   R31,X       ; D2
-            INC   A
+            CLC
+            ADC   #$01        ; INC A
             STA   R31,X
 
 @SDHC:      LDA   #SDHC
@@ -146,8 +154,10 @@ GETBLOCK:   PHX               ; save X
             DEY
             BNE   @LOOP
   
- @END:      PLY               ; restore Y
-            PLX               ; restore X
+ @END:      PLA               ; restore Y
+            TAY
+            PLA               ; restore X
+            TAX
             RTS
 
 
@@ -158,9 +168,11 @@ GETBLOCK:   PHX               ; save X
 ;
 ;*******************************
 
-COMMAND:    PHY               ; save Y
-            LDY   SLOT
+COMMAND:    ;PHY               ; save Y
             STA   DATA,X      ; send command
+            TYA
+            PHA
+            LDY   SLOT
             LDA   R30,Y       ; get arg from R30 on
             STA   DATA,X
             LDA   R31,Y
@@ -171,8 +183,9 @@ COMMAND:    PHY               ; save Y
             STA   DATA,X
             LDA   #DUMMY
             STA   DATA,X      ; dummy crc
+            PLA               ; restore Y
+            TAY
             JSR   GETR1
-            PLY               ; restore Y
             RTS
 
 
@@ -188,7 +201,7 @@ COMMAND:    PHY               ; save Y
 
 CARDDET:    PHA
             LDA   #CD         ; 0: card in
-            BIT   SS,X        ; 1: card out
+            AND   SS,X        ; 1: card out
             CLC
             BEQ   @DONE       ; card is in
             SEC               ; card is out
@@ -208,7 +221,7 @@ CARDDET:    PHA
 
 WRPROT:     PHA
             LDA   #WP         ; 0: write enabled
-            BIT   SS,X        ; 1: write disabled
+            AND   SS,X        ; 1: write disabled
             CLC
             BEQ   @DONE
             SEC
@@ -228,7 +241,7 @@ WRPROT:     PHA
 
 INITED:     PHA
             LDA   #CARD_INIT  ; 0: card not initialized
-            BIT   SS,X        ; 1: card initialized
+            AND   SS,X        ; 1: card initialized
             CLC
             BNE   @DONE
             SEC

@@ -1,7 +1,7 @@
 ;*******************************
 ;
 ; Apple][Sd Firmware
-; Version 1.2.3
+; Version 1.3.0
 ; Main source
 ;
 ; (c) Florian Reitz, 2017 - 2021
@@ -77,7 +77,7 @@
 
             LDY   #0          ; display copyright message
 @DRAW:      LDA   TEXT,Y
-            BEQ   @OAPPLE     ; check for NULL
+            BEQ   @OAPPLE     ; check for end of string
             STA   $0750,Y     ; put second to last line
             INY
             BPL   @DRAW
@@ -89,9 +89,11 @@
             BPL   @INIT       ; and skip boot if pressed
 
 @NEXTSLOT:  LDA   CURSLOT     ; skip boot when no card
-            DEC   A
+            SEC
+            SBC   #$01
             STA   CMDHI       ; use CMDHI/LO as pointer
-            STZ   CMDLO
+            LDA   #0
+            STA   CMDLO
             JMP   (CMDLO)
 
 @INIT:      JSR   INIT
@@ -106,9 +108,10 @@
 ; load disk blocks 0 and 1 to $800 and $A00
 @BOOT:      LDA   #$08        ; load to $800
             STA   BUFFER+1    ; buffer hi
-            STZ   BUFFER      ; buffer lo
-            STZ   BLOCKNUM+1  ; block hi
-            STZ   BLOCKNUM    ; block lo
+            LDA   #0
+            STA   BUFFER      ; buffer lo
+            STA   BLOCKNUM+1  ; block hi
+            STA   BLOCKNUM    ; block lo
             LDA   SLOT16
             STA   DSNUMBER    ; set to current slot
             JSR   READ
@@ -116,8 +119,9 @@
 
             LDA   #$0A
             STA   BUFFER+1    ; buffer hi
-            STZ   BUFFER      ; buffer lo
-            STZ   BLOCKNUM+1  ; block hi
+            LDA   #0
+            STA   BUFFER      ; buffer lo
+            STA   BLOCKNUM+1  ; block hi
             LDA   #$01
             STA   BLOCKNUM    ; block lo
             JSR   READ
@@ -136,7 +140,8 @@ DRIVER:     CLC               ; ProDOS entry
             SEC               ; Smartport entry
 
 @PRODOS:    PHP               ; transfer P to X
-            PLX
+            PLA
+            TAX
             LDY   #PDZPSIZE-1 ; save zeropage area for ProDOS
 @SAVEZP:    LDA   PDZPAREA,Y
             PHA
@@ -173,16 +178,19 @@ DRIVER:     CLC               ; ProDOS entry
             BCS   @SMARTPORT  ; Smartport dispatcher
             JSR   PRODOS      ; ProDOS dispatcher
 
-@END:       PHX
+@END:       PHA               ; push A
+            TXA 
+            PHA               ; push X
             LDX   SLOT        ; X holds $0s
-            STA   R30,X       ; save A
-            PLA
-            STA   R31,X       ; save X
-            TYA
-            STA   R32,X       ; save Y
             PHP
             PLA
-            STA   R33,X       ; save P
+            STA   R33,X       ; save P            
+            TYA
+            STA   R32,X       ; save Y            
+            PLA
+            STA   R31,X       ; save X
+            PLA
+            STA   R30,X       ; save A
             
             LDY   #0
 @RESTZP:    PLA               ; restore zeropage area
@@ -190,22 +198,23 @@ DRIVER:     CLC               ; ProDOS entry
             INY
             CPY   #PDZPSIZE
             BCC   @RESTZP
-            
+
             LDA   R33,X       ; get retval
             PHA
+            LDA   R30,X       ; restore A
+            PHA            
             LDA   R32,X
-            PHA
+            TAY               ; restore Y
             LDA   R31,X
-            PHA
-            LDA   R30,X        ; restore A
-            PLX                ; restore X
-            PLY                ; restore Y
-            PLP                ; restore P
+            TAX               ; restore X              
+            PLA
+            PLP               ; restore P
             RTS
 
 @SMARTPORT: CLC
             JSR   SMARTPORT
-            BRA   @END
+            CLV
+            BVC   @END
 
 
 ;*******************************
@@ -221,7 +230,8 @@ DRIVER:     CLC               ; ProDOS entry
 ;*******************************
 
             .segment "EXTROM"
-INIT:       STZ   CTRL,X      ; reset SPI controller
+INIT:       LDA   #$00
+            STA   CTRL,X      ; reset SPI controller
             LDA   #SS0        ; set CS high
             STA   SS,X
             LDY   #10
@@ -360,7 +370,7 @@ KNOWNRTS:   RTS
 .endrep
 .endmacro
 
-TEXT:       ASC " Apple][Sd v1.2.3 (c)2021 Florian Reitz"
+TEXT:       ASC " Apple][Sd v1.3.0 (c)2021 Florian Reitz"
             .byt $00
             .assert(*-TEXT)=40, error, "TEXT must be 40 bytes long"
 

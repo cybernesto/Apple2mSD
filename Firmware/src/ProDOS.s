@@ -1,7 +1,7 @@
 ;*******************************
 ;
 ; Apple][Sd Firmware
-; Version 1.2.3
+; Version 1.3.0
 ; ProDOS functions
 ;
 ; (c) Florian Reitz, 2017 - 2021
@@ -171,11 +171,11 @@ READ:       JSR   CARDDET     ; check for card
 
 @IOERROR:   SEC               ; an error occured
             LDA   #ERR_IOERR
-            BRA   @DONE
+            BCS   @DONE
 
 @NDERROR:   SEC               ; an error occured
             LDA   #ERR_NODRIVE
-            BRA   @DONE
+            BCS   @DONE
 
 
 ;*******************************
@@ -251,8 +251,8 @@ WRITE:      JSR   WRPROT
 
 @IOERROR:   SEC               ; an error occured
             LDA   #ERR_IOERR
-            BRA   @DONE
+            BCS   @DONE
 
 @WPERROR:   SEC
             LDA   #ERR_NOWRITE
-            BRA   @DONE
+            BCS   @DONE

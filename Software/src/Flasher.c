@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <conio.h>
 #include <string.h>
-#include <apple2enh.h>
+#include <apple2.h>
 
 // Binary can't be larger than 2k
 #define BUFFER_SIZE     2048
@@ -40,9 +40,8 @@ int main()
     volatile uint8* pSlotRom = SLOT_ROM_START;
     volatile uint8 dummy;
 
-    videomode(VIDEOMODE_40COL);
     clrscr();
-    cprintf("AppleIISd firmware flasher V1.2\r\n");
+    cprintf("AppleIISd firmware flasher V1.3\r\n");
     cprintf("(c) 2019-2020 Florian Reitz\r\n\r\n");
 
     // ask for slot
@@ -104,14 +103,14 @@ int main()
         pAIISD->status.pgmen = 1;
 
         // write to SLOTROM
-        cprintf("\r\n\r\nFlashing SLOTROM: ");
+        cprintf("\r\n\r\nFlashing SLOTROM:  ");
         writeChip(buffer, pSlotRom, 256);
 
         cprintf("\r\nVerifying SLOTROM: ");
         if(verifyChip(buffer, pSlotRom, 256))
         {
             // write to EXT_ROM
-            cprintf("\r\n\r\nFlashing EXTROM:  ");
+            cprintf("\r\n\r\nFlashing EXTROM:   ");
 
             // clear CFFF and dummy read to enable correct EXT_ROM
         	dummy = *CFFF;

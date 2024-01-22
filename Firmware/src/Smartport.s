@@ -1,7 +1,7 @@
 ;*******************************
 ;
 ; Apple][Sd Firmware
-; Version 1.2.3
+; Version 1.3.0
 ; Smartport functions
 ;
 ; (c) Florian Reitz, 2017 - 2021
@@ -70,7 +70,8 @@ SMARTPORT:  LDY   #SMZPSIZE-1   ; save zeropage area for Smarport
             CPX   #$09+1        ; command too large
             BCS   @END
 
-            LDA   (SMPARAMLIST) ; parameter count
+            LDY   #0
+            LDA   (SMPARAMLIST),Y ; parameter count
             CMP   REQPARAMCOUNT,X
             BNE   @COUNTMISMATCH
 
@@ -104,10 +105,14 @@ SMARTPORT:  LDY   #SMZPSIZE-1   ; save zeropage area for Smarport
 
 @COUNTMISMATCH:
             LDA   #ERR_BADPCNT
-            BRA   @END
+            JMP   @END
             
 @JMPSPCOMMAND:                  ; use offset from cmd*2
-            JMP   (SPDISPATCH,X)
+            LDA   SPDISPATCH+1,X
+            PHA
+            LDA   SPDISPATCH,X
+            PHA
+            RTS
             
 
 
@@ -126,7 +131,8 @@ SMSTATUS:   JSR   GETCSLIST
 
 ; TODO support partitions based on card size
 @STATUS00:  LDA   #4            ; support 4 partitions
-            STA   (SMCMDLIST)
+            LDY   #0
+            STA   (SMCMDLIST),Y
 
             LDY   #7
 @LOOP00:    LDA   STATUS00DATA-1,Y
@@ -148,7 +154,8 @@ SMSTATUS:   JSR   GETCSLIST
             RTS
 
 @GETDCB:    LDA   #1            ; return 'empty' DCB, one byte
-            STA   (SMCMDLIST)
+            LDY   #0
+            STA   (SMCMDLIST),Y
             TAY
             LDA   #NO_ERR
             STA   (SMCMDLIST),Y
@@ -164,7 +171,8 @@ SMSTATUS:   JSR   GETCSLIST
 @WRPROT:    JSR   WRPROT
             BCC   @STATUSBYTE   
             ORA   #$04          ; SD card write-protected
-@STATUSBYTE:STA  (SMCMDLIST)
+@STATUSBYTE:LDY   #0
+            STA  (SMCMDLIST),Y
 
             LDY   #1            ; block count, always $00FFFF
             LDA   #$FF
@@ -280,15 +288,15 @@ TRANSLATE:  LDA   DRVNUM,Y
             BEQ   @UNIT3
             CMP   #4
             BEQ   @UNIT4
-            BRA   @BADUNIT      ; only 4 partitions are supported
+            BNE   @BADUNIT      ; only 4 partitions are supported
 
 @UNIT1:     LDA   SLOT16        ; this slot
-            BRA   @STORE
+            JMP   @STORE            
 @UNIT2:     LDA   SLOT16
             ORA   #$80          ; drive 1
-            BRA   @STORE
+            JMP   @STORE
 @UNIT3:     LDA   PHANTOMSLOT,Y ; phantom slot
-            BRA   @STORE
+            JMP   @STORE
 @UNIT4:     LDA   PHANTOMSLOT,Y ; phantom slot         
             ORA   #$80          ; drive 1
 
@@ -388,16 +396,16 @@ REQPARAMCOUNT:
 
 ; Command jump table
 SPDISPATCH:
-            .word SMSTATUS
-            .word SMREADBLOCK
-            .word SMWRITEBLOCK
-            .word SMFORMAT
-            .word SMCONTROL
-            .word SMINIT
-            .word SMOPEN
-            .word SMCLOSE
-            .word SMREADCHAR
-            .word SMWRITECHAR
+            .word SMSTATUS-1
+            .word SMREADBLOCK-1
+            .word SMWRITEBLOCK-1
+            .word SMFORMAT-1
+            .word SMCONTROL-1
+            .word SMINIT-1
+            .word SMOPEN-1
+            .word SMCLOSE-1
+            .word SMREADCHAR-1
+            .word SMWRITECHAR-1
 
 ; Status 00 command data
 STATUS00DATA:
