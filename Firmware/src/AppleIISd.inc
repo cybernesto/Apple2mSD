@@ -41,6 +41,7 @@ R31         :=    $04F8
 R32         :=    $0578
 R33         :=    $05F8
 DRVNUM      :=    $0678
+CURSLOT     :=    $07F8       ; $Cs
 
 ; Rom equates
 OAPPLE      :=    $C061       ; open apple key
