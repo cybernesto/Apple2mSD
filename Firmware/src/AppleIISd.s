@@ -73,12 +73,17 @@
             ASL   A
             ASL   A
             STA   SLOT16      ; $s0
-            TAX               ; X holds now SLOT16
-
+ 
+            LDX   $FBB3       ; Machine ID
             LDY   #0          ; display copyright message
 @DRAW:      LDA   TEXT,Y
             BEQ   @OAPPLE     ; check for end of string
-            STA   $0750,Y     ; put second to last line
+            CMP   #$E0
+            BCC   @NOCAPS
+            CPX   #$06        ; Is it an Apple IIe or newer?
+            BEQ   @NOCAPS
+            AND   #$DF        ; mask for uppercase conversion
+@NOCAPS:    STA   $0750,Y     ; put second to last line
             INY
             BPL   @DRAW
 
@@ -86,42 +91,39 @@
             JSR   $FCA8       ; wait for 100 ms
 
             LDA   OAPPLE      ; check for OA key
-            BPL   @INIT       ; and skip boot if pressed
-
+            BMI   @NEXTSLOT   ; and skip boot if pressed
+ 
+            LDA   SLOT16
+            TAX               ; X holds now SLOT16
+            JSR   INIT
+            BCC   @BOOT       ; init successful
+ 
 @NEXTSLOT:  LDA   CURSLOT     ; skip boot when no card
             SEC
             SBC   #$01
             STA   CMDHI       ; use CMDHI/LO as pointer
             LDA   #0
             STA   CMDLO
-            JMP   (CMDLO)
-
-@INIT:      JSR   INIT
-            BNE   @NEXTSLOT   ; init not successful
-
+            JMP   (CMDLO)            
+ 
 ;*******************************
 ;
 ; Boot from SD card
 ;
 ;*******************************
-
 ; load disk blocks 0 and 1 to $800 and $A00
-@BOOT:      LDA   #$08        ; load to $800
+@BOOT:      STX   DSNUMBER    ; set to current slot
+            LDA   #$08        ; load to $800
             STA   BUFFER+1    ; buffer hi
             LDA   #0
             STA   BUFFER      ; buffer lo
             STA   BLOCKNUM+1  ; block hi
             STA   BLOCKNUM    ; block lo
-            LDA   SLOT16
-            STA   DSNUMBER    ; set to current slot
             JSR   READ
             BCS   @NEXTSLOT   ; load not successful 
 
             LDA   #$0A
             STA   BUFFER+1    ; buffer hi
-            LDA   #0
-            STA   BUFFER      ; buffer lo
-            STA   BLOCKNUM+1  ; block hi
             LDA   #$01
             STA   BLOCKNUM    ; block lo
             JSR   READ
